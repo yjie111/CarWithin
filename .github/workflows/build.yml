@@ -1,0 +1,33 @@
+name: Build CarWithin Unsigned IPA
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: 检出源码
+        uses: actions/checkout@v4
+      - name: 设置 Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+      - name: 编译与打包
+        run: |
+          xcodebuild clean build \
+            -project *.xcodeproj \
+            -scheme CarWithin \
+            -configuration Release \
+            -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            BUILD_DIR=build
+          mkdir -p Payload
+          cp -r build/Release-iphoneos/*.app Payload/
+          zip -r CarWithin-KingMax.ipa Payload
+          rm -rf Payload
+      - name: 上传 IPA 产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: CarWithin-KingMax-IPA
+          path: CarWithin-KingMax.ipa
